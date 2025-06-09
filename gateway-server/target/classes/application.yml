@@ -9,19 +9,36 @@ spring:
       discovery:
         locator:
           enabled: true
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: 
+              - "http://localhost:8080"
+              - "http://localhost:8081"
+              - "http://127.0.0.1:8080"
+              - "http://127.0.0.1:8081"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
       routes:
         - id: business-service
           uri: lb://business-service
           predicates:
-            - Path=/business/**
+            - Path=/business-service/**,/business/**,/food/**,/foodCategory/**
         - id: user-service
           uri: lb://user-service
           predicates:
-            - Path=/user/**
+            - Path=/user-service/**,/user/**,/deliveryAddress/**
         - id: order-service
           uri: lb://order-service
           predicates:
-            - Path=/order/**
+            - Path=/order-service/**,/order/**,/cart/**
   config:
     import: optional:configserver:http://localhost:8888
   rabbitmq:

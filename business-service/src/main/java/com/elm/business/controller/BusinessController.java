@@ -21,30 +21,56 @@ public class BusinessController {
 
     @PostMapping("/listBusinessByOrderTypeId")
     @CircuitBreaker(name = "businessService", fallbackMethod = "listBusinessByOrderTypeIdFallback")
-    public ResponseResult<List<Business>> listBusinessByOrderTypeId(@RequestParam("orderTypeId") Integer orderTypeId) {
-        List<Business> businessList = businessService.listBusinessByOrderTypeId(orderTypeId);
+    public ResponseResult<List<Business>> listBusinessByOrderTypeId(@RequestParam(value = "orderTypeId", required = false) Integer orderTypeId, 
+                                                                   @RequestParam(value = "categoryId", required = false) Integer categoryId) {
+        // 打印收到的参数值，方便调试
+        log.info("Received orderTypeId: {}, categoryId: {}", orderTypeId, categoryId);
         
-        // Enhance with frontend-required fields
-        businessList.forEach(business -> {
-            business.setRating(4.8);
-            business.setOrderCount(4);
-            business.setMonthSales(345);
-            business.setMinPrice(business.getStarPrice());
-            business.setDeliveryMethod("蜂鸟配送");
-            business.setDistance("3.22km");
-            business.setDeliveryTime("30");
-            business.setFoodType(business.getBusinessExplain());
-            // Set random badge count for testing
-            if (business.getBusinessId() % 3 == 0) {
-                business.setBadge(3);
-            } else if (business.getBusinessId() % 3 == 1) {
-                business.setBadge(2);
-            } else {
-                business.setBadge(1);
+        // 优先使用orderTypeId，如果为null则使用categoryId
+        Integer typeId = orderTypeId != null ? orderTypeId : categoryId;
+        
+        // 如果两个参数都为null，返回所有商家
+        if (typeId == null) {
+            log.warn("Both orderTypeId and categoryId are null, returning all businesses");
+            return ResponseResult.success(businessService.listAllBusinesses());
+        }
+        
+        log.info("Querying businesses with orderTypeId: {}", typeId);
+        try {
+            List<Business> businessList = businessService.listBusinessByOrderTypeId(typeId);
+            
+            if (businessList == null || businessList.isEmpty()) {
+                log.warn("No businesses found for orderTypeId: {}", typeId);
+                return ResponseResult.error("没有找到该分类的商家");
             }
-        });
-        
-        return ResponseResult.success(businessList);
+            
+            log.info("Found {} businesses for orderTypeId: {}", businessList.size(), typeId);
+            
+            // Enhance with frontend-required fields
+            businessList.forEach(business -> {
+                business.setRating(4.8);
+                business.setOrderCount(4);
+                business.setMonthSales(345);
+                business.setMinPrice(business.getStarPrice());
+                business.setDeliveryMethod("蜂鸟配送");
+                business.setDistance("3.22km");
+                business.setDeliveryTime("30");
+                business.setFoodType(business.getBusinessExplain());
+                // Set random badge count for testing
+                if (business.getBusinessId() % 3 == 0) {
+                    business.setBadge(3);
+                } else if (business.getBusinessId() % 3 == 1) {
+                    business.setBadge(2);
+                } else {
+                    business.setBadge(1);
+                }
+            });
+            
+            return ResponseResult.success(businessList);
+        } catch (Exception e) {
+            log.error("Error querying businesses with orderTypeId: {}", typeId, e);
+            return ResponseResult.error("查询商家列表时出错: " + e.getMessage());
+        }
     }
 
     @PostMapping("/getBusinessById")
