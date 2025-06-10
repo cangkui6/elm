@@ -12,12 +12,12 @@ public interface UserMapper {
     @Select("SELECT * FROM user WHERE userId = #{userId}")
     User getUserById(@Param("userId") String userId);
 
-    @Select("SELECT * FROM user WHERE username = #{username} AND password = #{password}")
-    User getUserByUsernameAndPassword(@Param("username") String username, @Param("password") String password);
+    @Select("SELECT * FROM user WHERE userName = #{userName} AND password = #{password}")
+    User getUserByUserNameAndPassword(@Param("userName") String userName, @Param("password") String password);
 
     @Select("SELECT * FROM user WHERE userId = #{userId} AND password = #{password}")
     User getUserByIdAndPassword(@Param("userId") String userId, @Param("password") String password);
 
-    @Insert("INSERT INTO user (userId, username, password, userSex) VALUES (#{userId}, #{username}, #{password}, #{userSex})")
+    @Insert("INSERT INTO user (userId, password, userName, userSex, delTag) VALUES (#{userId}, #{password}, #{userName}, #{userSex}, 1)")
     int saveUser(User user);
 } 

@@ -18,8 +18,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User login(String username, String password) {
-        return userMapper.getUserByUsernameAndPassword(username, password);
+    public User login(String userName, String password) {
+        return userMapper.getUserByUserNameAndPassword(userName, password);
     }
 
     @Override
@@ -29,6 +29,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public int register(User user) {
+        // Set default values if they are null
+        if (user.getUserSex() == null) {
+            user.setUserSex(1); // Default to male
+        }
+        if (user.getDelTag() == null) {
+            user.setDelTag(1); // Default to not deleted
+        }
         return userMapper.saveUser(user);
     }
 } 

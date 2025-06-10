@@ -23,7 +23,7 @@ public class UserController {
         return ResponseResult.success(user);
     }
 
-    // 新增 - 适配前端登录页面所需的API
+    // 适配前端登录页面所需的API
     @PostMapping("/getUserById")
     @CircuitBreaker(name = "userService", fallbackMethod = "userExistsFallback")
     public ResponseResult<Integer> checkUserExists(@RequestParam("userId") String userId) {
@@ -36,7 +36,7 @@ public class UserController {
         }
     }
 
-    // 新增 - 适配前端登录页面所需的API
+    // 适配前端登录页面所需的API
     @PostMapping("/getUserByIdByPass")
     @CircuitBreaker(name = "userService", fallbackMethod = "loginByIdPasswordFallback")
     public ResponseResult<User> loginByIdPassword(@RequestParam("userId") String userId, 
@@ -52,8 +52,8 @@ public class UserController {
 
     @PostMapping("/login")
     @CircuitBreaker(name = "userService", fallbackMethod = "loginFallback")
-    public ResponseResult<User> login(@RequestParam("username") String username, @RequestParam("password") String password) {
-        User user = userService.login(username, password);
+    public ResponseResult<User> login(@RequestParam("userName") String userName, @RequestParam("password") String password) {
+        User user = userService.login(userName, password);
         if (user != null) {
             return ResponseResult.success(user);
         } else {
@@ -72,7 +72,7 @@ public class UserController {
         }
     }
     
-    // 新增 - 适配前端注册页面所需的API
+    // 适配前端注册页面所需的API
     @PostMapping("/saveUser")
     @CircuitBreaker(name = "userService", fallbackMethod = "saveUserFallback")
     public ResponseResult<Integer> saveUser(@RequestParam("userId") String userId,
@@ -81,19 +81,23 @@ public class UserController {
                                    @RequestParam("userSex") String userSex) {
         log.info("保存新用户: {}", userId);
         
-        User user = new User();
-        user.setUserId(userId);  // 直接使用字符串，不再转换
-        user.setPassword(password);
-        // 使用username字段存储userName
-        user.setUsername(userName);
-        // userSex在User类中是String类型
-        user.setUserSex(userSex);
-        
-        int result = userService.register(user);
-        if (result > 0) {
-            return ResponseResult.success(1);
-        } else {
-            return ResponseResult.error("注册失败");
+        try {
+            User user = new User();
+            user.setUserId(userId);
+            user.setPassword(password);
+            user.setUserName(userName);
+            user.setUserSex(Integer.parseInt(userSex));
+            user.setDelTag(1); // 正常状态
+            
+            int result = userService.register(user);
+            if (result > 0) {
+                return ResponseResult.success(1); // 成功返回1
+            } else {
+                return ResponseResult.error("注册失败");
+            }
+        } catch (Exception e) {
+            log.error("注册用户时发生错误: {}", e.getMessage(), e);
+            return ResponseResult.error("注册失败: " + e.getMessage());
         }
     }
 
@@ -118,7 +122,7 @@ public class UserController {
         return ResponseResult.error("服务降级：保存用户失败");
     }
 
-    public ResponseResult<User> loginFallback(String username, String password, Throwable t) {
+    public ResponseResult<User> loginFallback(String userName, String password, Throwable t) {
         log.error("Circuit breaker fallback: login failed", t);
         return ResponseResult.error("服务降级：登录失败");
     }
