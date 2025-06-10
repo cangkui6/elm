@@ -20,7 +20,7 @@ public interface CartMapper {
         @Result(column = "businessId", property = "business", 
             one = @One(select = "com.elm.order.mapper.BusinessMapper.getBusinessById"))
     })
-    List<Cart> listCart(@Param("userId") Integer userId, @Param("businessId") Integer businessId);
+    List<Cart> listCart(@Param("userId") String userId, @Param("businessId") Integer businessId);
 
     @Select("SELECT * FROM cart WHERE userId = #{userId}")
     @Results({
@@ -34,17 +34,17 @@ public interface CartMapper {
         @Result(column = "businessId", property = "business", 
             one = @One(select = "com.elm.order.mapper.BusinessMapper.getBusinessById"))
     })
-    List<Cart> listCartByUserId(@Param("userId") Integer userId);
+    List<Cart> listCartByUserId(@Param("userId") String userId);
 
-    @Insert("INSERT INTO cart (foodId, businessId, userId) VALUES (#{foodId}, #{businessId}, #{userId})")
+    @Insert("INSERT INTO cart (foodId, businessId, userId, quantity) VALUES (#{foodId}, #{businessId}, #{userId}, #{quantity})")
     int saveCart(Cart cart);
 
     @Update("UPDATE cart SET quantity = #{quantity} WHERE userId = #{userId} AND businessId = #{businessId} AND foodId = #{foodId}")
     int updateCart(Cart cart);
 
     @Delete("DELETE FROM cart WHERE userId = #{userId} AND businessId = #{businessId} AND foodId = #{foodId}")
-    int removeCart(@Param("userId") Integer userId, @Param("businessId") Integer businessId, @Param("foodId") Integer foodId);
+    int removeCart(@Param("userId") String userId, @Param("businessId") Integer businessId, @Param("foodId") Integer foodId);
 
     @Delete("DELETE FROM cart WHERE userId = #{userId} AND businessId = #{businessId}")
-    int removeCartByUserIdAndBusinessId(@Param("userId") Integer userId, @Param("businessId") Integer businessId);
+    int removeCartByUserIdAndBusinessId(@Param("userId") String userId, @Param("businessId") Integer businessId);
 } 

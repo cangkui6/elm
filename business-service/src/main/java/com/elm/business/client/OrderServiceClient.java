@@ -12,6 +12,22 @@ import java.util.List;
 public interface OrderServiceClient {
 
     @PostMapping("/cart/listCart")
-    ResponseResult<List<Cart>> listCart(@RequestParam("userId") Integer userId, 
+    ResponseResult<List<Cart>> listCart(@RequestParam("userId") String userId, 
                                        @RequestParam(value = "businessId", required = false) Integer businessId);
+                                       
+    @PostMapping("/cart/saveCart")
+    ResponseResult<Integer> saveCart(@RequestParam("userId") String userId,
+                                    @RequestParam("businessId") Integer businessId,
+                                    @RequestParam("foodId") Integer foodId);
+                                    
+    @PostMapping("/cart/updateCart")
+    ResponseResult<Integer> updateCart(@RequestParam("userId") String userId,
+                                     @RequestParam("businessId") Integer businessId,
+                                     @RequestParam("foodId") Integer foodId,
+                                     @RequestParam("quantity") Integer quantity);
+                                     
+    @PostMapping("/cart/removeCart")
+    ResponseResult<Integer> removeCart(@RequestParam("userId") String userId,
+                                     @RequestParam("businessId") Integer businessId,
+                                     @RequestParam("foodId") Integer foodId);
 } 

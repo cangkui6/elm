@@ -17,8 +17,23 @@ public class OrderServiceFallbackFactory implements FallbackFactory<OrderService
         log.error("Order service call failed", cause);
         return new OrderServiceClient() {
             @Override
-            public ResponseResult<List<Cart>> listCart(Integer userId, Integer businessId) {
+            public ResponseResult<List<Cart>> listCart(String userId, Integer businessId) {
                 return ResponseResult.error("服务降级：购物车服务调用失败");
+            }
+            
+            @Override
+            public ResponseResult<Integer> saveCart(String userId, Integer businessId, Integer foodId) {
+                return ResponseResult.error("服务降级：添加购物车失败");
+            }
+            
+            @Override
+            public ResponseResult<Integer> updateCart(String userId, Integer businessId, Integer foodId, Integer quantity) {
+                return ResponseResult.error("服务降级：更新购物车失败");
+            }
+            
+            @Override
+            public ResponseResult<Integer> removeCart(String userId, Integer businessId, Integer foodId) {
+                return ResponseResult.error("服务降级：删除购物车失败");
             }
         };
     }

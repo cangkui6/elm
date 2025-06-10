@@ -18,9 +18,36 @@ public class UserController {
 
     @GetMapping("/getUserById")
     @CircuitBreaker(name = "userService", fallbackMethod = "getUserByIdFallback")
-    public ResponseResult<User> getUserById(@RequestParam("userId") Integer userId) {
+    public ResponseResult<User> getUserById(@RequestParam("userId") String userId) {
         User user = userService.getUserById(userId);
         return ResponseResult.success(user);
+    }
+
+    // 新增 - 适配前端登录页面所需的API
+    @PostMapping("/getUserById")
+    @CircuitBreaker(name = "userService", fallbackMethod = "userExistsFallback")
+    public ResponseResult<Integer> checkUserExists(@RequestParam("userId") String userId) {
+        log.info("检查用户是否存在: {}", userId);
+        User user = userService.getUserById(userId);
+        if (user != null) {
+            return ResponseResult.success(1);  // 用户存在返回1
+        } else {
+            return ResponseResult.success(0);  // 用户不存在返回0
+        }
+    }
+
+    // 新增 - 适配前端登录页面所需的API
+    @PostMapping("/getUserByIdByPass")
+    @CircuitBreaker(name = "userService", fallbackMethod = "loginByIdPasswordFallback")
+    public ResponseResult<User> loginByIdPassword(@RequestParam("userId") String userId, 
+                                         @RequestParam("password") String password) {
+        log.info("使用用户ID和密码登录: {}", userId);
+        User user = userService.loginByIdPassword(userId, password);
+        if (user != null) {
+            return ResponseResult.success(user);
+        } else {
+            return ResponseResult.error("用户名或密码错误");
+        }
     }
 
     @PostMapping("/login")
@@ -44,11 +71,51 @@ public class UserController {
             return ResponseResult.error("注册失败");
         }
     }
+    
+    // 新增 - 适配前端注册页面所需的API
+    @PostMapping("/saveUser")
+    @CircuitBreaker(name = "userService", fallbackMethod = "saveUserFallback")
+    public ResponseResult<Integer> saveUser(@RequestParam("userId") String userId,
+                                   @RequestParam("password") String password,
+                                   @RequestParam("userName") String userName,
+                                   @RequestParam("userSex") String userSex) {
+        log.info("保存新用户: {}", userId);
+        
+        User user = new User();
+        user.setUserId(userId);  // 直接使用字符串，不再转换
+        user.setPassword(password);
+        // 使用username字段存储userName
+        user.setUsername(userName);
+        // userSex在User类中是String类型
+        user.setUserSex(userSex);
+        
+        int result = userService.register(user);
+        if (result > 0) {
+            return ResponseResult.success(1);
+        } else {
+            return ResponseResult.error("注册失败");
+        }
+    }
 
     // Fallback methods
-    public ResponseResult<User> getUserByIdFallback(Integer userId, Throwable t) {
+    public ResponseResult<User> getUserByIdFallback(String userId, Throwable t) {
         log.error("Circuit breaker fallback: getUserById failed", t);
         return ResponseResult.error("服务降级：获取用户信息失败");
+    }
+
+    public ResponseResult<Integer> userExistsFallback(String userId, Throwable t) {
+        log.error("Circuit breaker fallback: checkUserExists failed", t);
+        return ResponseResult.error("服务降级：检查用户是否存在失败");
+    }
+    
+    public ResponseResult<User> loginByIdPasswordFallback(String userId, String password, Throwable t) {
+        log.error("Circuit breaker fallback: loginByIdPassword failed", t);
+        return ResponseResult.error("服务降级：使用ID和密码登录失败");
+    }
+    
+    public ResponseResult<Integer> saveUserFallback(String userId, String password, String userName, String userSex, Throwable t) {
+        log.error("Circuit breaker fallback: saveUser failed", t);
+        return ResponseResult.error("服务降级：保存用户失败");
     }
 
     public ResponseResult<User> loginFallback(String username, String password, Throwable t) {

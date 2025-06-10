@@ -6,15 +6,15 @@ import java.util.List;
 
 public interface CartService {
 
-    List<Cart> listCart(Integer userId, Integer businessId);
+    List<Cart> listCart(String userId, Integer businessId);
 
-    List<Cart> listCartByUserId(Integer userId);
+    List<Cart> listCartByUserId(String userId);
 
     int saveCart(Cart cart);
 
     int updateCart(Cart cart);
 
-    int removeCart(Integer userId, Integer businessId, Integer foodId);
+    int removeCart(String userId, Integer businessId, Integer foodId);
 
-    int removeCartByUserIdAndBusinessId(Integer userId, Integer businessId);
+    int removeCartByUserIdAndBusinessId(String userId, Integer businessId);
 } 

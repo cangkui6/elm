@@ -15,12 +15,12 @@ public class CartServiceImpl implements CartService {
     private CartMapper cartMapper;
 
     @Override
-    public List<Cart> listCart(Integer userId, Integer businessId) {
+    public List<Cart> listCart(String userId, Integer businessId) {
         return cartMapper.listCart(userId, businessId);
     }
 
     @Override
-    public List<Cart> listCartByUserId(Integer userId) {
+    public List<Cart> listCartByUserId(String userId) {
         return cartMapper.listCartByUserId(userId);
     }
 
@@ -35,12 +35,12 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public int removeCart(Integer userId, Integer businessId, Integer foodId) {
+    public int removeCart(String userId, Integer businessId, Integer foodId) {
         return cartMapper.removeCart(userId, businessId, foodId);
     }
 
     @Override
-    public int removeCartByUserIdAndBusinessId(Integer userId, Integer businessId) {
+    public int removeCartByUserIdAndBusinessId(String userId, Integer businessId) {
         return cartMapper.removeCartByUserIdAndBusinessId(userId, businessId);
     }
 } 

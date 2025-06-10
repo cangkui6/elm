@@ -4,9 +4,11 @@ import com.elm.common.entity.User;
 
 public interface UserService {
 
-    User getUserById(Integer userId);
+    User getUserById(String userId);
 
     User login(String username, String password);
 
     int register(User user);
+
+    User loginByIdPassword(String userId, String password);
 } 

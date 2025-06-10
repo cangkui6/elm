@@ -11,7 +11,7 @@ public class Cart implements Serializable {
     private Integer cartId;
     private Integer foodId;
     private Integer businessId;
-    private Integer userId;
+    private String userId;
     private Integer quantity;
     
     // For frontend display
