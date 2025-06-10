@@ -23,22 +23,22 @@ public class CartController {
     public ResponseResult<List<Cart>> listCart(@RequestParam("userId") String userId, 
                                               @RequestParam(value = "businessId", required = false) Integer businessId) {
         try {
-            List<Cart> cartList;
-            if (businessId != null) {
-                cartList = cartService.listCart(userId, businessId);
-            } else {
-                cartList = cartService.listCartByUserId(userId);
+        List<Cart> cartList;
+        if (businessId != null) {
+            cartList = cartService.listCart(userId, businessId);
+        } else {
+            cartList = cartService.listCartByUserId(userId);
+        }
+        
+        // Enhance with frontend-required fields
+        cartList.forEach(cart -> {
+            if (cart.getFood() != null) {
+                cart.getFood().setDescription(cart.getFood().getFoodExplain());
+                cart.getFood().setPrice(cart.getFood().getFoodPrice());
             }
-            
-            // Enhance with frontend-required fields
-            cartList.forEach(cart -> {
-                if (cart.getFood() != null) {
-                    cart.getFood().setDescription(cart.getFood().getFoodExplain());
-                    cart.getFood().setPrice(cart.getFood().getFoodPrice());
-                }
-            });
-            
-            return ResponseResult.success(cartList);
+        });
+        
+        return ResponseResult.success(cartList);
         } catch (Exception e) {
             log.error("Error listing cart for userId: {}", userId, e);
             return ResponseResult.error("查询购物车失败: " + e.getMessage());
@@ -51,17 +51,17 @@ public class CartController {
                                           @RequestParam("businessId") Integer businessId,
                                           @RequestParam("foodId") Integer foodId) {
         try {
-            Cart cart = new Cart();
-            cart.setUserId(userId);
-            cart.setBusinessId(businessId);
-            cart.setFoodId(foodId);
+        Cart cart = new Cart();
+        cart.setUserId(userId);
+        cart.setBusinessId(businessId);
+        cart.setFoodId(foodId);
             cart.setQuantity(1); // Default to 1 when adding a new item
-            
-            int result = cartService.saveCart(cart);
-            if (result > 0) {
-                return ResponseResult.success(1);
-            } else {
-                return ResponseResult.error("添加购物车失败");
+        
+        int result = cartService.saveCart(cart);
+        if (result > 0) {
+            return ResponseResult.success(1);
+        } else {
+            return ResponseResult.error("添加购物车失败");
             }
         } catch (Exception e) {
             log.error("Error saving cart for userId: {}", userId, e);
@@ -76,17 +76,17 @@ public class CartController {
                                            @RequestParam("foodId") Integer foodId,
                                            @RequestParam("quantity") Integer quantity) {
         try {
-            Cart cart = new Cart();
-            cart.setUserId(userId);
-            cart.setBusinessId(businessId);
-            cart.setFoodId(foodId);
-            cart.setQuantity(quantity);
-            
-            int result = cartService.updateCart(cart);
-            if (result > 0) {
-                return ResponseResult.success(1);
-            } else {
-                return ResponseResult.error("更新购物车失败");
+        Cart cart = new Cart();
+        cart.setUserId(userId);
+        cart.setBusinessId(businessId);
+        cart.setFoodId(foodId);
+        cart.setQuantity(quantity);
+        
+        int result = cartService.updateCart(cart);
+        if (result > 0) {
+            return ResponseResult.success(1);
+        } else {
+            return ResponseResult.error("更新购物车失败");
             }
         } catch (Exception e) {
             log.error("Error updating cart for userId: {}", userId, e);
@@ -100,12 +100,12 @@ public class CartController {
                                            @RequestParam("businessId") Integer businessId,
                                            @RequestParam("foodId") Integer foodId) {
         try {
-            int result = cartService.removeCart(userId, businessId, foodId);
-            if (result > 0) {
-                return ResponseResult.success(1);
-            } else {
-                return ResponseResult.error("删除购物车失败");
-            }
+        int result = cartService.removeCart(userId, businessId, foodId);
+        if (result > 0) {
+            return ResponseResult.success(1);
+        } else {
+            return ResponseResult.error("删除购物车失败");
+        }
         } catch (Exception e) {
             log.error("Error removing from cart for userId: {}", userId, e);
             return ResponseResult.error("删除购物车失败: " + e.getMessage());
