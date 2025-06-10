@@ -21,4 +21,13 @@ public class Order implements Serializable {
     // For display
     private Business business;
     private List<OrderDetail> orderDetailList;
+    
+    // 前端需要使用list来访问订单明细
+    private List<OrderDetail> list;
+    
+    // 设置订单明细，同时也设置list字段
+    public void setOrderDetailList(List<OrderDetail> orderDetailList) {
+        this.orderDetailList = orderDetailList;
+        this.list = orderDetailList;
+    }
 } 

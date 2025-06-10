@@ -178,6 +178,39 @@ public class OrderController {
         List<Order> orderList = orderService.listOrdersByUserId(userId);
         return ResponseResult.success(orderList);
     }
+    
+    /**
+     * 根据用户ID获取订单列表 (POST方法版本)
+     * @param userId 用户ID
+     * @return 订单列表
+     */
+    @PostMapping("/listOrdersByUserId")
+    @CircuitBreaker(name = "orderService", fallbackMethod = "listOrdersByUserIdFallback")
+    public ResponseResult<List<Order>> listOrdersByUserIdPost(@RequestParam("userId") String userId) {
+        log.info("POST请求：获取用户订单列表，userId: {}", userId);
+        try {
+            List<Order> orderList = orderService.listOrdersByUserId(userId);
+            log.info("获取到用户订单数量: {}", orderList != null ? orderList.size() : 0);
+            
+            // 详细日志记录每个订单的关键信息，便于调试
+            if (orderList != null) {
+                for (int i = 0; i < orderList.size(); i++) {
+                    Order order = orderList.get(i);
+                    log.info("订单[{}]信息: orderId={}, businessName={}, orderState={}, orderTotal={}, list大小={}",
+                             i, order.getOrderId(), 
+                             order.getBusiness() != null ? order.getBusiness().getBusinessName() : "null",
+                             order.getOrderState(),
+                             order.getOrderTotal(),
+                             order.getList() != null ? order.getList().size() : "null");
+                }
+            }
+            
+            return ResponseResult.success(orderList);
+        } catch (Exception e) {
+            log.error("获取用户订单列表异常: ", e);
+            return ResponseResult.error("获取订单列表失败: " + e.getMessage());
+        }
+    }
 
     /**
      * 更新订单状态

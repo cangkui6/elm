@@ -103,24 +103,23 @@ public class OrderServiceImpl implements OrderService {
             if (orderList != null && !orderList.isEmpty()) {
                 for (Order order : orderList) {
                     try {
-                        // 查询商家信息
-                        Business business = businessMapper.getBusinessById(order.getBusinessId());
-                        if (business != null) {
-                            order.setBusiness(business);
-                        }
-                        
                         // 查询订单明细及食品信息
                         List<OrderDetail> orderDetailList = orderMapper.listOrderDetailsByOrderId(order.getOrderId());
-                        for (OrderDetail detail : orderDetailList) {
-                            Food food = foodMapper.getFoodById(detail.getFoodId());
-                            if (food != null) {
-                                detail.setFood(food);
+                        if (orderDetailList != null && !orderDetailList.isEmpty()) {
+                            log.debug("订单 {} 有 {} 个明细项", order.getOrderId(), orderDetailList.size());
+                            // 确保每个明细都有food信息
+                            for (OrderDetail detail : orderDetailList) {
+                                if (detail.getFood() == null) {
+                                    Food food = foodMapper.getFoodById(detail.getFoodId());
+                                    if (food != null) {
+                                        detail.setFood(food);
+                                    }
+                                }
                             }
+                            order.setOrderDetailList(orderDetailList);
                         }
-                        
-                        order.setOrderDetailList(orderDetailList);
                     } catch (Exception e) {
-                        log.error("查询订单关联信息异常，orderId: {}", order.getOrderId(), e);
+                        log.error("查询订单 {} 的明细信息异常", order.getOrderId(), e);
                     }
                 }
             }

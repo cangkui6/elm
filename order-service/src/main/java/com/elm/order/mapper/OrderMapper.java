@@ -22,7 +22,24 @@ public interface OrderMapper {
     @Select("SELECT * FROM orders WHERE orderId = #{orderId}")
     Order getOrderById(@Param("orderId") Integer orderId);
     
-    @Select("SELECT * FROM orders WHERE userId = #{userId}")
+    @Select("SELECT o.*, b.businessName, b.businessAddress, b.deliveryPrice " +
+            "FROM orders o " +
+            "LEFT JOIN business b ON o.businessId = b.businessId " +
+            "WHERE o.userId = #{userId} " +
+            "ORDER BY o.orderDate DESC")
+    @Results({
+        @Result(property = "orderId", column = "orderId"),
+        @Result(property = "userId", column = "userId"),
+        @Result(property = "businessId", column = "businessId"),
+        @Result(property = "orderDate", column = "orderDate"),
+        @Result(property = "orderTotal", column = "orderTotal"),
+        @Result(property = "daId", column = "daId"),
+        @Result(property = "orderState", column = "orderState"),
+        @Result(property = "business.businessId", column = "businessId"),
+        @Result(property = "business.businessName", column = "businessName"),
+        @Result(property = "business.businessAddress", column = "businessAddress"),
+        @Result(property = "business.deliveryPrice", column = "deliveryPrice")
+    })
     List<Order> listOrdersByUserId(@Param("userId") String userId);
     
     @Select("SELECT od.*, f.foodName, f.foodPrice, f.foodImg FROM orderdetailet od " +
