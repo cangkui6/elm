@@ -112,6 +112,19 @@ public class CartController {
         }
     }
 
+    /**
+     * 根据用户ID和商家ID查询购物车信息
+     * @param userId 用户ID
+     * @param businessId 商家ID
+     * @return 购物车信息列表
+     */
+    @PostMapping("/listCartByBusinessId")
+    @CircuitBreaker(name = "cartService", fallbackMethod = "listCartByBusinessIdFallback")
+    public ResponseResult<List<Cart>> listCartByBusinessId(@RequestParam("userId") String userId, @RequestParam("businessId") Integer businessId) {
+        List<Cart> cartList = cartService.listCart(userId, businessId);
+        return ResponseResult.success(cartList);
+    }
+
     // Fallback methods
     public ResponseResult<List<Cart>> listCartFallback(String userId, Integer businessId, Throwable t) {
         log.error("Circuit breaker fallback: listCart failed", t);
@@ -131,5 +144,10 @@ public class CartController {
     public ResponseResult<Integer> removeCartFallback(String userId, Integer businessId, Integer foodId, Throwable t) {
         log.error("Circuit breaker fallback: removeCart failed", t);
         return ResponseResult.error("服务降级：删除购物车失败");
+    }
+
+    public ResponseResult<List<Cart>> listCartByBusinessIdFallback(String userId, Integer businessId, Throwable t) {
+        log.error("Circuit breaker fallback: listCartByBusinessId failed", t);
+        return ResponseResult.error("服务降级：获取购物车信息失败");
     }
 } 

@@ -11,7 +11,7 @@ public class Order implements Serializable {
     private static final long serialVersionUID = 1L;
     
     private Integer orderId;
-    private Integer userId;
+    private String userId;
     private Integer businessId;
     private String orderDate;
     private Double orderTotal;

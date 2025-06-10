@@ -9,7 +9,7 @@ public class DeliveryAddress implements Serializable {
     private static final long serialVersionUID = 1L;
     
     private Integer daId;
-    private Integer userId;
+    private String userId;
     private String contactName;
     private String contactSex;
     private String contactTel;

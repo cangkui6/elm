@@ -20,7 +20,7 @@ public class DeliveryAddressServiceImpl implements DeliveryAddressService {
     }
 
     @Override
-    public List<DeliveryAddress> listDeliveryAddressByUserId(Integer userId) {
+    public List<DeliveryAddress> listDeliveryAddressByUserId(String userId) {
         return deliveryAddressMapper.listDeliveryAddressByUserId(userId);
     }
 

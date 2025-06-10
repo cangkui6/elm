@@ -27,14 +27,27 @@ public class DeliveryAddressController {
 
     @GetMapping("/listDeliveryAddressByUserId")
     @CircuitBreaker(name = "deliveryAddressService", fallbackMethod = "listDeliveryAddressByUserIdFallback")
-    public ResponseResult<List<DeliveryAddress>> listDeliveryAddressByUserId(@RequestParam("userId") Integer userId) {
+    public ResponseResult<List<DeliveryAddress>> listDeliveryAddressByUserId(@RequestParam("userId") String userId) {
         List<DeliveryAddress> deliveryAddressList = deliveryAddressService.listDeliveryAddressByUserId(userId);
         return ResponseResult.success(deliveryAddressList);
     }
 
     @PostMapping("/saveDeliveryAddress")
-    @CircuitBreaker(name = "deliveryAddressService", fallbackMethod = "saveDeliveryAddressFallback")
-    public ResponseResult<Integer> saveDeliveryAddress(@RequestBody DeliveryAddress deliveryAddress) {
+    @CircuitBreaker(name = "deliveryAddressService", fallbackMethod = "saveDeliveryAddressFallbackWithParams")
+    public ResponseResult<Integer> saveDeliveryAddress(
+            @RequestParam("userId") String userId,
+            @RequestParam("contactName") String contactName,
+            @RequestParam("contactSex") String contactSex,
+            @RequestParam("contactTel") String contactTel,
+            @RequestParam("address") String address) {
+        
+        DeliveryAddress deliveryAddress = new DeliveryAddress();
+        deliveryAddress.setUserId(userId);
+        deliveryAddress.setContactName(contactName);
+        deliveryAddress.setContactSex(contactSex);
+        deliveryAddress.setContactTel(contactTel);
+        deliveryAddress.setAddress(address);
+        
         int result = deliveryAddressService.saveDeliveryAddress(deliveryAddress);
         if (result > 0) {
             return ResponseResult.success(deliveryAddress.getDaId());
@@ -44,8 +57,23 @@ public class DeliveryAddressController {
     }
 
     @PutMapping("/updateDeliveryAddress")
-    @CircuitBreaker(name = "deliveryAddressService", fallbackMethod = "updateDeliveryAddressFallback")
-    public ResponseResult<Integer> updateDeliveryAddress(@RequestBody DeliveryAddress deliveryAddress) {
+    @CircuitBreaker(name = "deliveryAddressService", fallbackMethod = "updateDeliveryAddressFallbackWithParams")
+    public ResponseResult<Integer> updateDeliveryAddress(
+            @RequestParam("daId") Integer daId,
+            @RequestParam("userId") String userId,
+            @RequestParam("contactName") String contactName,
+            @RequestParam("contactSex") String contactSex,
+            @RequestParam("contactTel") String contactTel,
+            @RequestParam("address") String address) {
+        
+        DeliveryAddress deliveryAddress = new DeliveryAddress();
+        deliveryAddress.setDaId(daId);
+        deliveryAddress.setUserId(userId);
+        deliveryAddress.setContactName(contactName);
+        deliveryAddress.setContactSex(contactSex);
+        deliveryAddress.setContactTel(contactTel);
+        deliveryAddress.setAddress(address);
+        
         int result = deliveryAddressService.updateDeliveryAddress(deliveryAddress);
         if (result > 0) {
             return ResponseResult.success(result);
@@ -71,7 +99,7 @@ public class DeliveryAddressController {
         return ResponseResult.error("服务降级：获取配送地址失败");
     }
 
-    public ResponseResult<List<DeliveryAddress>> listDeliveryAddressByUserIdFallback(Integer userId, Throwable t) {
+    public ResponseResult<List<DeliveryAddress>> listDeliveryAddressByUserIdFallback(String userId, Throwable t) {
         log.error("Circuit breaker fallback: listDeliveryAddressByUserId failed", t);
         return ResponseResult.error("服务降级：获取用户配送地址列表失败");
     }
@@ -80,8 +108,22 @@ public class DeliveryAddressController {
         log.error("Circuit breaker fallback: saveDeliveryAddress failed", t);
         return ResponseResult.error("服务降级：添加配送地址失败");
     }
+    
+    public ResponseResult<Integer> saveDeliveryAddressFallbackWithParams(
+            String userId, String contactName, String contactSex, 
+            String contactTel, String address, Throwable t) {
+        log.error("Circuit breaker fallback: saveDeliveryAddress failed", t);
+        return ResponseResult.error("服务降级：添加配送地址失败");
+    }
 
     public ResponseResult<Integer> updateDeliveryAddressFallback(DeliveryAddress deliveryAddress, Throwable t) {
+        log.error("Circuit breaker fallback: updateDeliveryAddress failed", t);
+        return ResponseResult.error("服务降级：更新配送地址失败");
+    }
+
+    public ResponseResult<Integer> updateDeliveryAddressFallbackWithParams(
+            Integer daId, String userId, String contactName, 
+            String contactSex, String contactTel, String address, Throwable t) {
         log.error("Circuit breaker fallback: updateDeliveryAddress failed", t);
         return ResponseResult.error("服务降级：更新配送地址失败");
     }

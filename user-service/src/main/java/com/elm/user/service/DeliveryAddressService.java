@@ -8,7 +8,7 @@ public interface DeliveryAddressService {
 
     DeliveryAddress getDeliveryAddressById(Integer daId);
 
-    List<DeliveryAddress> listDeliveryAddressByUserId(Integer userId);
+    List<DeliveryAddress> listDeliveryAddressByUserId(String userId);
 
     int saveDeliveryAddress(DeliveryAddress deliveryAddress);
 
