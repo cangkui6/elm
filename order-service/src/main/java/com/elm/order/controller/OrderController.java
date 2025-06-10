@@ -189,6 +189,11 @@ public class OrderController {
     public ResponseResult<List<Order>> listOrdersByUserIdPost(@RequestParam("userId") String userId) {
         log.info("POST请求：获取用户订单列表，userId: {}", userId);
         try {
+            if (userId == null || userId.trim().isEmpty()) {
+                log.error("用户ID不能为空");
+                return ResponseResult.error("用户ID不能为空");
+            }
+            
             List<Order> orderList = orderService.listOrdersByUserId(userId);
             log.info("获取到用户订单数量: {}", orderList != null ? orderList.size() : 0);
             
@@ -196,13 +201,23 @@ public class OrderController {
             if (orderList != null) {
                 for (int i = 0; i < orderList.size(); i++) {
                     Order order = orderList.get(i);
-                    log.info("订单[{}]信息: orderId={}, businessName={}, orderState={}, orderTotal={}, list大小={}",
-                             i, order.getOrderId(), 
-                             order.getBusiness() != null ? order.getBusiness().getBusinessName() : "null",
-                             order.getOrderState(),
-                             order.getOrderTotal(),
-                             order.getList() != null ? order.getList().size() : "null");
+                    String businessName = order.getBusiness() != null ? order.getBusiness().getBusinessName() : "未知商家";
+                    int detailCount = order.getOrderDetailList() != null ? order.getOrderDetailList().size() : 0;
+                    int listCount = order.getList() != null ? order.getList().size() : 0;
+                    
+                    log.info("订单[{}]信息: orderId={}, businessName={}, orderState={}, orderTotal={}, " +
+                             "orderDetailList大小={}, list大小={}",
+                             i, order.getOrderId(), businessName, order.getOrderState(),
+                             order.getOrderTotal(), detailCount, listCount);
+                    
+                    // 确保前端需要的list属性存在（虽然在Order类中已经处理，这里是双重保险）
+                    if (order.getList() == null && order.getOrderDetailList() != null) {
+                        order.setList(order.getOrderDetailList());
+                    }
                 }
+            } else {
+                log.warn("未找到用户的订单，返回空列表");
+                orderList = new ArrayList<>(); // 返回空列表而非null
             }
             
             return ResponseResult.success(orderList);
