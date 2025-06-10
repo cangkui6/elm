@@ -23,22 +23,36 @@ public class CartController {
     public ResponseResult<List<Cart>> listCart(@RequestParam("userId") String userId, 
                                               @RequestParam(value = "businessId", required = false) Integer businessId) {
         try {
-        List<Cart> cartList;
-        if (businessId != null) {
-            cartList = cartService.listCart(userId, businessId);
-        } else {
-            cartList = cartService.listCartByUserId(userId);
-        }
-        
-        // Enhance with frontend-required fields
-        cartList.forEach(cart -> {
-            if (cart.getFood() != null) {
-                cart.getFood().setDescription(cart.getFood().getFoodExplain());
-                cart.getFood().setPrice(cart.getFood().getFoodPrice());
+            log.info("查询购物车 - userId: {}, businessId: {}", userId, businessId);
+            
+            List<Cart> cartList;
+            if (businessId != null) {
+                log.info("根据userId和businessId查询购物车");
+                cartList = cartService.listCart(userId, businessId);
+            } else {
+                log.info("仅根据userId查询购物车");
+                cartList = cartService.listCartByUserId(userId);
             }
-        });
-        
-        return ResponseResult.success(cartList);
+            
+            log.info("查询结果: 获取到 {} 条购物车记录", cartList != null ? cartList.size() : 0);
+            if (cartList != null && !cartList.isEmpty()) {
+                for (Cart cart : cartList) {
+                    log.info("购物车记录: cartId={}, userId={}, businessId={}, foodId={}, quantity={}",
+                        cart.getCartId(), cart.getUserId(), cart.getBusinessId(), cart.getFoodId(), cart.getQuantity());
+                }
+            }
+            
+            // Enhance with frontend-required fields
+            if (cartList != null) {
+                cartList.forEach(cart -> {
+                    if (cart.getFood() != null) {
+                        cart.getFood().setDescription(cart.getFood().getFoodExplain());
+                        cart.getFood().setPrice(cart.getFood().getFoodPrice());
+                    }
+                });
+            }
+            
+            return ResponseResult.success(cartList);
         } catch (Exception e) {
             log.error("Error listing cart for userId: {}", userId, e);
             return ResponseResult.error("查询购物车失败: " + e.getMessage());
@@ -51,18 +65,36 @@ public class CartController {
                                           @RequestParam("businessId") Integer businessId,
                                           @RequestParam("foodId") Integer foodId) {
         try {
-        Cart cart = new Cart();
-        cart.setUserId(userId);
-        cart.setBusinessId(businessId);
-        cart.setFoodId(foodId);
-            cart.setQuantity(1); // Default to 1 when adding a new item
-        
-        int result = cartService.saveCart(cart);
-        if (result > 0) {
-            return ResponseResult.success(1);
-        } else {
-            return ResponseResult.error("添加购物车失败");
+            // 先检查购物车中是否已有该商品
+            List<Cart> existingCarts = cartService.listCart(userId, businessId);
+            
+            for (Cart existingCart : existingCarts) {
+                if (existingCart.getFoodId().equals(foodId)) {
+                    // 商品已存在，更新数量
+                    existingCart.setQuantity(existingCart.getQuantity() + 1);
+                    int result = cartService.updateCart(existingCart);
+                    if (result > 0) {
+                        return ResponseResult.success(1);
+                    } else {
+                        return ResponseResult.error("更新购物车失败");
+                    }
+                }
             }
+            
+            // 如果商品不存在，添加新记录
+            Cart cart = new Cart();
+            cart.setUserId(userId);
+            cart.setBusinessId(businessId);
+            cart.setFoodId(foodId);
+            cart.setQuantity(1); // 默认添加1个
+            
+            int result = cartService.saveCart(cart);
+            if (result > 0) {
+                return ResponseResult.success(1);
+            } else {
+                return ResponseResult.error("添加购物车失败");
+            }
+            
         } catch (Exception e) {
             log.error("Error saving cart for userId: {}", userId, e);
             return ResponseResult.error("添加购物车失败: " + e.getMessage());
@@ -76,17 +108,22 @@ public class CartController {
                                            @RequestParam("foodId") Integer foodId,
                                            @RequestParam("quantity") Integer quantity) {
         try {
-        Cart cart = new Cart();
-        cart.setUserId(userId);
-        cart.setBusinessId(businessId);
-        cart.setFoodId(foodId);
-        cart.setQuantity(quantity);
-        
-        int result = cartService.updateCart(cart);
-        if (result > 0) {
-            return ResponseResult.success(1);
-        } else {
-            return ResponseResult.error("更新购物车失败");
+            // 数量合法性校验
+            if (quantity < 0) {
+                return ResponseResult.error("购物车数量不能为负数");
+            }
+            
+            Cart cart = new Cart();
+            cart.setUserId(userId);
+            cart.setBusinessId(businessId);
+            cart.setFoodId(foodId);
+            cart.setQuantity(quantity);
+            
+            int result = cartService.updateCart(cart);
+            if (result > 0) {
+                return ResponseResult.success(1);
+            } else {
+                return ResponseResult.error("更新购物车失败");
             }
         } catch (Exception e) {
             log.error("Error updating cart for userId: {}", userId, e);

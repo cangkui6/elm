@@ -28,4 +28,7 @@ public class Business implements Serializable {
     private String deliveryTime;
     private String foodType;
     private Integer badge;
+    
+    // 购物车商品数量，用于商家列表页面显示
+    private Integer quantity = 0;
 } 

@@ -28,6 +28,19 @@ eureka:
     service-url:
       defaultZone: http://localhost:8761/eureka/
 
+# Feign配置
 feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: full
   circuitbreaker:
-    enabled: true 
+    enabled: true
+  hystrix:
+    enabled: false
+  
+logging:
+  level:
+    com.elm.business.client.OrderServiceClient: DEBUG 
