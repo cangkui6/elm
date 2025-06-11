@@ -11,9 +11,11 @@
         <module name="common" />
         <module name="business-service" />
         <module name="gateway-server" />
+        <module name="eureka-server2" />
         <module name="order-service" />
         <module name="user-service" />
         <module name="eureka-server" />
+        <module name="eureka-server3" />
       </profile>
     </annotationProcessing>
   </component>
@@ -23,6 +25,8 @@
       <module name="common" options="-parameters" />
       <module name="config-server" options="-parameters" />
       <module name="eureka-server" options="-parameters" />
+      <module name="eureka-server2" options="-parameters" />
+      <module name="eureka-server3" options="-parameters" />
       <module name="gateway-server" options="-parameters" />
       <module name="order-service" options="-parameters" />
       <module name="user-service" options="-parameters" />
