@@ -68,25 +68,9 @@ public class BusinessController {
             
             log.info("Found {} businesses for orderTypeId: {}", businessList.size(), typeId);
             
-            // Enhance with frontend-required fields
+            // 仅初始化购物车数量
             businessList.forEach(business -> {
-                business.setRating(4.8);
-                business.setOrderCount(4);
-                business.setMonthSales(345);
                 business.setMinPrice(business.getStarPrice());
-                business.setDeliveryMethod("蜂鸟配送");
-                business.setDistance("3.22km");
-                business.setDeliveryTime("30");
-                business.setFoodType(business.getBusinessExplain());
-                // Set random badge count for testing
-                if (business.getBusinessId() % 3 == 0) {
-                    business.setBadge(3);
-                } else if (business.getBusinessId() % 3 == 1) {
-                    business.setBadge(2);
-                } else {
-                    business.setBadge(1);
-                }
-                
                 // 初始化购物车数量为0
                 business.setQuantity(0);
             });
@@ -156,23 +140,9 @@ public class BusinessController {
             
             log.info("Found {} businesses for categoryId: {}", businessList.size(), categoryId);
             
-            // 增强商家信息
+            // 仅初始化商家必要字段
             businessList.forEach(business -> {
-                business.setRating(4.8);
-                business.setOrderCount(4);
-                business.setMonthSales(345);
                 business.setMinPrice(business.getStarPrice());
-                business.setDeliveryMethod("蜂鸟配送");
-                business.setDistance("3.22km");
-                business.setDeliveryTime("30");
-                business.setFoodType(business.getBusinessExplain());
-                if (business.getBusinessId() % 3 == 0) {
-                    business.setBadge(3);
-                } else if (business.getBusinessId() % 3 == 1) {
-                    business.setBadge(2);
-                } else {
-                    business.setBadge(1);
-                }
             });
             
             // 如果用户已登录，查询购物车信息
@@ -224,15 +194,8 @@ public class BusinessController {
                 return ResponseResult.error("没有找到该商家");
             }
             
-            // Enhance with frontend-required fields
-            business.setRating(4.8);
-            business.setOrderCount(4);
-            business.setMonthSales(345);
+            // 仅设置必要字段
             business.setMinPrice(business.getStarPrice());
-            business.setDeliveryMethod("蜂鸟配送");
-            business.setDistance("3.22km");
-            business.setDeliveryTime("30");
-            business.setFoodType(business.getBusinessExplain());
             
             return ResponseResult.success(business);
         } catch (Exception e) {
@@ -246,24 +209,9 @@ public class BusinessController {
     public ResponseResult<List<Business>> listAllBusinesses() {
         List<Business> businessList = businessService.listAllBusinesses();
         
-        // Enhance with frontend-required fields
+        // 仅初始化必要字段
         businessList.forEach(business -> {
-            business.setRating(4.8);
-            business.setOrderCount(4);
-            business.setMonthSales(345);
             business.setMinPrice(business.getStarPrice());
-            business.setDeliveryMethod("蜂鸟配送");
-            business.setDistance("3.22km");
-            business.setDeliveryTime("30");
-            business.setFoodType(business.getBusinessExplain());
-            // Set random badge count
-            if (business.getBusinessId() % 3 == 0) {
-                business.setBadge(3);
-            } else if (business.getBusinessId() % 3 == 1) {
-                business.setBadge(2);
-            } else {
-                business.setBadge(1);
-            }
         });
         
         return ResponseResult.success(businessList);
@@ -277,24 +225,9 @@ public class BusinessController {
             
             List<Business> businessList = businessService.listAllBusinesses();
             
-            // Enhance with frontend-required fields
+            // 仅初始化必要字段
             businessList.forEach(business -> {
-                business.setRating(4.8);
-                business.setOrderCount(4);
-                business.setMonthSales(345);
                 business.setMinPrice(business.getStarPrice());
-                business.setDeliveryMethod("蜂鸟配送");
-                business.setDistance("3.22km");
-                business.setDeliveryTime("30");
-                business.setFoodType(business.getBusinessExplain());
-                // Set random badge count
-                if (business.getBusinessId() % 3 == 0) {
-                    business.setBadge(3);
-                } else if (business.getBusinessId() % 3 == 1) {
-                    business.setBadge(2);
-                } else {
-                    business.setBadge(1);
-                }
             });
             
             if (userId != null) {
@@ -355,15 +288,8 @@ public class BusinessController {
                 return ResponseResult.error("没有找到该商家");
             }
             
-            // Enhance with frontend-required fields
-            business.setRating(4.8);
-            business.setOrderCount(4);
-            business.setMonthSales(345);
+            // 仅设置必要字段
             business.setMinPrice(business.getStarPrice());
-            business.setDeliveryMethod("蜂鸟配送");
-            business.setDistance("3.22km");
-            business.setDeliveryTime("30");
-            business.setFoodType(business.getBusinessExplain());
             
             // Get food list for this business
             List<Food> foodList = foodService.listFoodByBusinessId(businessId);
@@ -578,122 +504,6 @@ public class BusinessController {
         }
     }
 
-    @GetMapping("/testCartQuantity")
-    public ResponseResult<?> testCartQuantity(@RequestParam("userId") String userId) {
-        try {
-            log.info("测试购物车数量计算 - userId: {}", userId);
-            
-            // 获取所有商家
-            List<Business> businessList = businessService.listAllBusinesses();
-            
-            // 查询该用户的所有购物车信息
-            ResponseResult<List<Cart>> cartResponse = orderServiceClient.listCart(userId, null);
-            
-            Map<String, Object> result = new HashMap<>();
-            result.put("userId", userId);
-            
-            if (cartResponse.getCode() == 1 && cartResponse.getData() != null) {
-                List<Cart> cartList = cartResponse.getData();
-                log.info("购物车数据条数: {}", cartList.size());
-                result.put("cartCount", cartList.size());
-                result.put("cartItems", cartList);
-                
-                // 统计每个商家的购物车商品数量
-                Map<Integer, Integer> businessCartCount = new HashMap<>();
-                for (Cart cart : cartList) {
-                    Integer businessId = cart.getBusinessId();
-                    Integer currentCount = businessCartCount.getOrDefault(businessId, 0);
-                    Integer newCount = currentCount + cart.getQuantity();
-                    businessCartCount.put(businessId, newCount);
-                    log.info("商家ID: {}, 食品ID: {}, 数量: {}, 累计数量: {}", 
-                        businessId, cart.getFoodId(), cart.getQuantity(), newCount);
-                }
-                result.put("businessCartCount", businessCartCount);
-                
-                // 模拟设置商家的购物车数量
-                List<Map<String, Object>> businessWithQuantity = new ArrayList<>();
-                for (Business business : businessList) {
-                    Integer quantity = businessCartCount.get(business.getBusinessId());
-                    Map<String, Object> businessMap = new HashMap<>();
-                    businessMap.put("businessId", business.getBusinessId());
-                    businessMap.put("businessName", business.getBusinessName());
-                    businessMap.put("quantity", quantity != null ? quantity : 0);
-                    businessWithQuantity.add(businessMap);
-                }
-                result.put("businessWithQuantity", businessWithQuantity);
-            } else {
-                result.put("cartError", "未获取到购物车数据");
-            }
-            
-            return ResponseResult.success(result);
-        } catch (Exception e) {
-            log.error("测试购物车数量计算出错", e);
-            return ResponseResult.error("测试失败: " + e.getMessage());
-        }
-    }
-
-    @GetMapping("/debugCartService")
-    public ResponseResult<?> debugCartService(@RequestParam("userId") String userId) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("userId", userId);
-        
-        try {
-            log.info("==== 开始调试购物车服务 - userId: {} ====", userId);
-            
-            // 1. 直接调用购物车服务
-            log.info("1. 调用 orderServiceClient.listCart");
-            ResponseResult<List<Cart>> cartResponse = null;
-            
-            try {
-                cartResponse = orderServiceClient.listCart(userId, null);
-                log.info("购物车服务响应: code={}, message={}, data是否为空: {}", 
-                    cartResponse.getCode(), cartResponse.getMessage(), 
-                    cartResponse.getData() == null ? "是" : "否");
-                
-                result.put("cartResponse", cartResponse);
-            } catch (Exception e) {
-                log.error("调用购物车服务异常", e);
-                result.put("cartServiceCallError", e.getMessage());
-                result.put("cartServiceCallErrorType", e.getClass().getName());
-            }
-            
-            // 2. 检查数据状态
-            if (cartResponse != null && cartResponse.getCode() == 1 && cartResponse.getData() != null) {
-                List<Cart> carts = cartResponse.getData();
-                log.info("获取到 {} 条购物车记录", carts.size());
-                result.put("cartCount", carts.size());
-                
-                // 记录购物车每一条数据
-                List<Map<String, Object>> cartItems = new ArrayList<>();
-                for (Cart cart : carts) {
-                    Map<String, Object> item = new HashMap<>();
-                    item.put("cartId", cart.getCartId());
-                    item.put("userId", cart.getUserId());
-                    item.put("businessId", cart.getBusinessId());
-                    item.put("foodId", cart.getFoodId());
-                    item.put("quantity", cart.getQuantity());
-                    cartItems.add(item);
-                }
-                result.put("cartItems", cartItems);
-            } else {
-                log.warn("未获取到购物车数据");
-                result.put("cartDataAvailable", false);
-                
-                if (cartResponse != null) {
-                    result.put("cartResponseCode", cartResponse.getCode());
-                    result.put("cartResponseMsg", cartResponse.getMessage());
-                }
-            }
-            
-            log.info("==== 调试购物车服务完成 ====");
-            return ResponseResult.success(result);
-        } catch (Exception e) {
-            log.error("调试过程中发生异常", e);
-            result.put("debugError", e.getMessage());
-            return ResponseResult.success(result);
-        }
-    }
-
     /**
      * 专门用于查询用户在各个商家的购物车数量
      * @param userId 用户ID
@@ -831,20 +641,13 @@ public class BusinessController {
     }
 
     /**
-     * 测试接口：查询数据库中所有商家信息
+     * 查询数据库中所有商家信息
      */
     @GetMapping("/getAllBusinessesFromDb")
     public ResponseResult<?> getAllBusinessesFromDb() {
         try {
-            // 直接查询数据库中所有商家
+            // 查询数据库中所有商家
             List<Business> businessList = businessService.listAllBusinesses();
-            
-            // 打印每个商家的信息
-            log.info("数据库中共有 {} 个商家", businessList.size());
-            for (Business business : businessList) {
-                log.info("商家ID: {}, 名称: {}, 分类ID: {}", 
-                    business.getBusinessId(), business.getBusinessName(), business.getOrderTypeId());
-            }
             
             // 统计每个分类下的商家数量
             Map<Integer, Integer> categoryCountMap = new HashMap<>();
@@ -853,12 +656,7 @@ public class BusinessController {
                 categoryCountMap.put(typeId, categoryCountMap.getOrDefault(typeId, 0) + 1);
             }
             
-            log.info("各分类商家数量统计:");
-            categoryCountMap.forEach((typeId, count) -> {
-                log.info("分类ID: {}, 商家数量: {}", typeId, count);
-            });
-            
-            // 创建一个更详细的响应
+            // 创建响应
             Map<String, Object> result = new HashMap<>();
             result.put("totalCount", businessList.size());
             result.put("businessList", businessList);
@@ -868,72 +666,6 @@ public class BusinessController {
         } catch (Exception e) {
             log.error("查询所有商家失败", e);
             return ResponseResult.error("查询所有商家失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 调试接口：查询用户购物车记录及数量映射
-     */
-    @GetMapping("/debugCartRecords")
-    public ResponseResult<?> debugCartRecords(@RequestParam("userId") String userId) {
-        try {
-            log.info("调试用户 {} 的购物车记录", userId);
-            
-            // 查询该用户的所有购物车信息
-            ResponseResult<List<Cart>> cartResponse = orderServiceClient.listCart(userId, null);
-            
-            Map<String, Object> result = new HashMap<>();
-            result.put("userId", userId);
-            
-            if (cartResponse != null) {
-                result.put("responseCode", cartResponse.getCode());
-                result.put("responseMessage", cartResponse.getMessage());
-                
-                if ((cartResponse.getCode() == 200 || cartResponse.getCode() == 1) && cartResponse.getData() != null) {
-                    List<Cart> cartList = cartResponse.getData();
-                    result.put("cartCount", cartList.size());
-                    result.put("cartItems", cartList);
-                    
-                    // 统计每个商家的购物车商品数量
-                    Map<Integer, Integer> businessCartCount = new HashMap<>();
-                    for (Cart cart : cartList) {
-                        Integer businessId = cart.getBusinessId();
-                        if (businessId != null) {
-                            Integer currentCount = businessCartCount.getOrDefault(businessId, 0);
-                            Integer quantity = cart.getQuantity() != null ? cart.getQuantity() : 0;
-                            Integer newCount = currentCount + quantity;
-                            businessCartCount.put(businessId, newCount);
-                        }
-                    }
-                    result.put("businessCartCount", businessCartCount);
-                    
-                    // 查询所有商家并列出与购物车匹配的情况
-                    List<Business> allBusinesses = businessService.listAllBusinesses();
-                    List<Map<String, Object>> businessWithCart = new ArrayList<>();
-                    
-                    for (Business business : allBusinesses) {
-                        Map<String, Object> item = new HashMap<>();
-                        item.put("businessId", business.getBusinessId());
-                        item.put("businessName", business.getBusinessName());
-                        
-                        // 获取该商家在购物车中的数量
-                        Integer quantity = businessCartCount.get(business.getBusinessId());
-                        item.put("cartQuantity", quantity != null ? quantity : 0);
-                        item.put("hasItems", quantity != null && quantity > 0);
-                        
-                        businessWithCart.add(item);
-                    }
-                    result.put("businessWithCart", businessWithCart);
-                }
-            } else {
-                result.put("error", "购物车服务响应为null");
-            }
-            
-            return ResponseResult.success(result);
-            
-        } catch (Exception e) {
-            log.error("调试用户 {} 的购物车记录失败", userId, e);
-            return ResponseResult.error("调试购物车记录失败: " + e.getMessage());
         }
     }
 } 
