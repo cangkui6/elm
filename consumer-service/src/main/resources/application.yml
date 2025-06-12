@@ -11,11 +11,20 @@ spring:
     port: 5672
     username: guest
     password: guest
+  cloud:
+    loadbalancer:
+      retry:
+        enabled: true  # 启用重试机制
+      cache:
+        enabled: true  # 启用缓存
+        ttl: 30000     # 缓存有效期(毫秒)
 
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/,http://localhost:8762/eureka/
+    fetch-registry: true
+    register-with-eureka: true
   instance:
     prefer-ip-address: true
     instance-id: ${spring.cloud.client.ip-address}:${server.port}
@@ -29,6 +38,21 @@ feign:
         loggerLevel: full
   circuitbreaker:
     enabled: true
+  compression:
+    request:
+      enabled: true
+      mime-types: text/xml,application/xml,application/json
+      min-request-size: 2048
+    response:
+      enabled: true
+
+# 配置Ribbon的重试机制
+ribbon:
+  ConnectTimeout: 1000
+  ReadTimeout: 5000
+  MaxAutoRetries: 1           # 对当前实例的重试次数
+  MaxAutoRetriesNextServer: 1 # 切换实例的重试次数
+  OkToRetryOnAllOperations: true
 
 management:
   endpoints:

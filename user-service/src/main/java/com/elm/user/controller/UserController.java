@@ -6,7 +6,11 @@ import com.elm.user.service.UserService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/user")
@@ -15,11 +19,25 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    
+    @Value("${server.port}")
+    private String serverPort;
+
+    @GetMapping("/instance-info")
+    public ResponseResult<Map<String, Object>> getInstanceInfo() {
+        Map<String, Object> info = new HashMap<>();
+        info.put("port", serverPort);
+        info.put("timestamp", System.currentTimeMillis());
+        info.put("instance", "user-service-" + serverPort);
+        log.info("Instance info requested on port: {}", serverPort);
+        return ResponseResult.success(info);
+    }
 
     @GetMapping("/getUserById")
     @CircuitBreaker(name = "userService", fallbackMethod = "getUserByIdFallback")
     public ResponseResult<User> getUserById(@RequestParam("userId") String userId) {
         User user = userService.getUserById(userId);
+        log.info("获取用户信息请求处理 [端口:{}]: userId={}", serverPort, userId);
         return ResponseResult.success(user);
     }
 
@@ -27,7 +45,7 @@ public class UserController {
     @PostMapping("/getUserById")
     @CircuitBreaker(name = "userService", fallbackMethod = "userExistsFallback")
     public ResponseResult<Integer> checkUserExists(@RequestParam("userId") String userId) {
-        log.info("检查用户是否存在: {}", userId);
+        log.info("检查用户是否存在 [端口:{}]: userId={}", serverPort, userId);
         User user = userService.getUserById(userId);
         if (user != null) {
             return ResponseResult.success(1);  // 用户存在返回1
@@ -41,7 +59,7 @@ public class UserController {
     @CircuitBreaker(name = "userService", fallbackMethod = "loginByIdPasswordFallback")
     public ResponseResult<User> loginByIdPassword(@RequestParam("userId") String userId, 
                                          @RequestParam("password") String password) {
-        log.info("使用用户ID和密码登录: {}", userId);
+        log.info("使用用户ID和密码登录 [端口:{}]: userId={}", serverPort, userId);
         User user = userService.loginByIdPassword(userId, password);
         if (user != null) {
             return ResponseResult.success(user);
@@ -79,7 +97,7 @@ public class UserController {
                                    @RequestParam("password") String password,
                                    @RequestParam("userName") String userName,
                                    @RequestParam("userSex") String userSex) {
-        log.info("保存新用户: {}", userId);
+        log.info("保存新用户 [端口:{}]: userId={}", serverPort, userId);
         
         try {
             User user = new User();
