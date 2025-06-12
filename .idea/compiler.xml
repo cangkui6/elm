@@ -8,25 +8,35 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="config-server" />
+        <module name="cart-service" />
+        <module name="address-service" />
         <module name="common" />
         <module name="business-service" />
         <module name="gateway-server" />
         <module name="eureka-server2" />
         <module name="order-service" />
         <module name="user-service" />
+        <module name="food-service" />
         <module name="eureka-server" />
-        <module name="eureka-server3" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="consumer-service" target="17" />
+      <module name="eureka-server3" target="17" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="address-service" options="-parameters" />
       <module name="business-service" options="-parameters" />
+      <module name="cart-service" options="-parameters" />
       <module name="common" options="-parameters" />
       <module name="config-server" options="-parameters" />
+      <module name="consumer-service" options="-parameters" />
       <module name="eureka-server" options="-parameters" />
       <module name="eureka-server2" options="-parameters" />
       <module name="eureka-server3" options="-parameters" />
+      <module name="food-service" options="-parameters" />
       <module name="gateway-server" options="-parameters" />
       <module name="order-service" options="-parameters" />
       <module name="user-service" options="-parameters" />

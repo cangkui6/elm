@@ -26,7 +26,10 @@ mybatis:
 eureka:
   client:
     service-url:
-      defaultZone: http://eureka1:8761/eureka/,http://eureka2:8762/eureka/,http://eureka3:8763/eureka/
+      defaultZone: http://localhost:8761/eureka/,http://localhost:8762/eureka/
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
 
 # Feign配置
 feign:
@@ -40,7 +43,3 @@ feign:
     enabled: true
   hystrix:
     enabled: false
-  
-logging:
-  level:
-    com.elm.business.client.OrderServiceClient: DEBUG 

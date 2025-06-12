@@ -1,9 +1,9 @@
 server:
-  port: 8002
+  port: 8005
 
 spring:
   application:
-    name: user-service
+    name: cart-service
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/elm?characterEncoding=utf-8

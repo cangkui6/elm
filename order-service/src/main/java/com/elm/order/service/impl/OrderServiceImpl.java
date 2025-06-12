@@ -2,11 +2,7 @@ package com.elm.order.service.impl;
 
 import com.elm.common.entity.Order;
 import com.elm.common.entity.OrderDetail;
-import com.elm.common.entity.Business;
-import com.elm.common.entity.Food;
 import com.elm.order.mapper.OrderMapper;
-import com.elm.order.mapper.BusinessMapper;
-import com.elm.order.mapper.FoodMapper;
 import com.elm.order.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +17,6 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private OrderMapper orderMapper;
-    
-    @Autowired
-    private BusinessMapper businessMapper;
-    
-    @Autowired
-    private FoodMapper foodMapper;
 
     @Override
     @Transactional
@@ -58,26 +48,15 @@ public class OrderServiceImpl implements OrderService {
         try {
             log.info("查询订单信息，orderId: {}", orderId);
             
-            // 1. 使用连接查询获取订单和商家信息
+            // 使用连接查询获取订单和商家信息
             Order order = orderMapper.getOrderWithBusinessById(orderId);
             
             if (order != null) {
                 log.info("订单信息: {}", order);
                 
-                // 2. 使用连接查询获取订单明细和食品信息
+                // 使用连接查询获取订单明细和食品信息
                 List<OrderDetail> orderDetailList = orderMapper.listOrderDetailsByOrderId(orderId);
                 log.info("查询到 {} 条订单明细", orderDetailList != null ? orderDetailList.size() : 0);
-                
-                // 确保每个明细的食品信息都正确设置
-                if (orderDetailList != null && !orderDetailList.isEmpty()) {
-                    for (OrderDetail detail : orderDetailList) {
-                        if (detail.getFood() == null) {
-                            // 如果映射没有成功自动关联Food，手动查询
-                            Food food = foodMapper.getFoodById(detail.getFoodId());
-                            detail.setFood(food);
-                        }
-                    }
-                }
                 
                 order.setOrderDetailList(orderDetailList);
             } else {
@@ -99,33 +78,15 @@ public class OrderServiceImpl implements OrderService {
             List<Order> orderList = orderMapper.listOrdersByUserId(userId);
             log.info("查询到 {} 条订单", orderList != null ? orderList.size() : 0);
             
-            // 查询每个订单的明细和相关信息
+            // 查询每个订单的明细信息
             if (orderList != null && !orderList.isEmpty()) {
                 for (Order order : orderList) {
                     try {
-                        // 确保商家信息存在
-                        if (order.getBusiness() == null && order.getBusinessId() != null) {
-                            Business business = businessMapper.getBusinessById(order.getBusinessId());
-                            if (business != null) {
-                                order.setBusiness(business);
-                                log.debug("为订单 {} 补充商家信息: {}", order.getOrderId(), business.getBusinessName());
-                            }
-                        }
-                        
-                        // 查询订单明细及食品信息
+                        // 查询订单明细
                         List<OrderDetail> orderDetailList = orderMapper.listOrderDetailsByOrderId(order.getOrderId());
                         if (orderDetailList != null && !orderDetailList.isEmpty()) {
                             log.debug("订单 {} 有 {} 个明细项", order.getOrderId(), orderDetailList.size());
-                            // 确保每个明细都有food信息
-                            for (OrderDetail detail : orderDetailList) {
-                                if (detail.getFood() == null && detail.getFoodId() != null) {
-                                    Food food = foodMapper.getFoodById(detail.getFoodId());
-                                    if (food != null) {
-                                        detail.setFood(food);
-                                    }
-                                }
-                            }
-                            // 设置订单明细列表（同时会设置list属性，见Order类中的setOrderDetailList方法）
+                            // 设置订单明细列表
                             order.setOrderDetailList(orderDetailList);
                         } else {
                             // 即使没有明细也需要设置空列表，避免前端访问null
