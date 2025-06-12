@@ -44,6 +44,12 @@ public class CartController {
                 }
             }
             
+            // 过滤掉数量为0的购物车项
+            if (cartList != null) {
+                cartList.removeIf(cart -> cart.getQuantity() == null || cart.getQuantity() <= 0);
+                log.info("过滤后的购物车记录数量: {}", cartList.size());
+            }
+            
             // Enhance with frontend-required fields
             if (cartList != null) {
                 cartList.forEach(cart -> {

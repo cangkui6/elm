@@ -8,7 +8,7 @@ import java.util.List;
 @Mapper
 public interface CartMapper {
 
-    @Select("SELECT c.* FROM cart c WHERE c.userId = #{userId} AND c.businessId = #{businessId}")
+    @Select("SELECT c.* FROM cart c WHERE c.userId = #{userId} AND c.businessId = #{businessId} AND c.quantity > 0")
     @Results({
         @Result(column = "cartId", property = "cartId"),
         @Result(column = "foodId", property = "foodId"),
@@ -22,7 +22,7 @@ public interface CartMapper {
     })
     List<Cart> listCart(@Param("userId") String userId, @Param("businessId") Integer businessId);
 
-    @Select("SELECT c.* FROM cart c WHERE c.userId = #{userId}")
+    @Select("SELECT c.* FROM cart c WHERE c.userId = #{userId} AND c.quantity > 0")
     @Results({
         @Result(column = "cartId", property = "cartId"),
         @Result(column = "foodId", property = "foodId"),
