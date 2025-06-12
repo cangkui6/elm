@@ -86,6 +86,15 @@ spring:
             - StripPrefix=0
           order: 6
           
+        # 消费者服务路由
+        - id: consumer-service
+          uri: lb://consumer-service
+          predicates:
+            - Path=/consumer/**
+          filters:
+            - StripPrefix=0
+          order: 7
+          
         # 前端路由刷新处理 - 最低优先级
         - id: frontend-fallback
           uri: ${spa.frontend-url}

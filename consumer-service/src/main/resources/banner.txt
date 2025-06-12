@@ -1,0 +1,6 @@
+, ,    ,    
+` `/ \,,_/\/ \  
+ { (  )  ( ) } 
+  \_/    \_/   
+   ELM Consumer Service  
+   Spring Boot ${spring-boot.version} 

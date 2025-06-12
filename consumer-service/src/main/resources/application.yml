@@ -1,14 +1,9 @@
 server:
-  port: 8006
+  port: 9001
 
 spring:
   application:
-    name: address-service
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/elm?characterEncoding=utf-8
-    username: root
-    password: 2254600749@qq.com
+    name: consumer-service
   config:
     import: optional:configserver:http://localhost:8888
   rabbitmq:
@@ -16,12 +11,6 @@ spring:
     port: 5672
     username: guest
     password: guest
-
-mybatis:
-  mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: com.elm.common.entity
-  configuration:
-    map-underscore-to-camel-case: true
 
 eureka:
   client:
@@ -32,5 +21,20 @@ eureka:
     instance-id: ${spring.cloud.client.ip-address}:${server.port}
 
 feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: full
   circuitbreaker:
-    enabled: true 
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always 

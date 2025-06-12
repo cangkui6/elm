@@ -28,6 +28,7 @@
         <module>address-service</module>
         <module>food-service</module>
         <module>cart-service</module>
+        <module>consumer-service</module>
     </modules>
 
     <properties>
