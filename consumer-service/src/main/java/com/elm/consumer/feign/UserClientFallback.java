@@ -2,11 +2,9 @@ package com.elm.consumer.feign;
 
 import com.elm.common.entity.User;
 import com.elm.common.result.ResponseResult;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 @Component
-@Primary
 public class UserClientFallback implements UserClient {
 
     @Override

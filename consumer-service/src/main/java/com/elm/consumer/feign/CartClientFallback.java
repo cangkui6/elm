@@ -2,13 +2,11 @@ package com.elm.consumer.feign;
 
 import com.elm.common.entity.Cart;
 import com.elm.common.result.ResponseResult;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
-@Primary
 public class CartClientFallback implements CartClient {
 
     @Override
