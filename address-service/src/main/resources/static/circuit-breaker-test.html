@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>熔断器测试页面 - 配送地址服务</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        
+        .test-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+        
+        button.danger {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+        }
+        
+        button.danger:hover {
+            box-shadow: 0 6px 20px rgba(244, 67, 54, 0.4);
+        }
+        
+        button.info {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+        }
+        
+        button.info:hover {
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+        }
+        
+        .result {
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        
+        .success {
+            border-color: #4CAF50;
+            background: #f1f8e9;
+            color: #2e7d32;
+        }
+        
+        .error {
+            border-color: #f44336;
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .info {
+            border-color: #2196F3;
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-closed {
+            background: #4CAF50;
+        }
+        
+        .status-open {
+            background: #f44336;
+        }
+        
+        .status-half-open {
+            background: #ff9800;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ 熔断器测试控制台</h1>
+        
+        <div class="test-section">
+            <h2>🔥 服务测试</h2>
+            <div class="button-group">
+                <button onclick="testSuccess()">正常请求</button>
+                <button class="danger" onclick="testFailure()">触发异常</button>
+                <button class="info" onclick="testCircuitBreakerStatus()">检查熔断器状态</button>
+                <button class="info" onclick="testHealthCheck()">健康检查</button>
+            </div>
+            <div id="testResult" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📊 熔断器状态</h2>
+            <div id="circuitBreakerStatus">
+                <span class="status-indicator status-closed"></span>
+                <span>状态：未知</span>
+            </div>
+            <div class="metrics" id="metrics">
+                <!-- 动态生成的指标卡片 -->
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🧪 批量测试</h2>
+            <div class="button-group">
+                <button onclick="triggerCircuitBreaker()">触发熔断器（连续失败）</button>
+                <button onclick="testRecovery()">测试恢复（半开状态）</button>
+                <button onclick="resetTest()">重置测试</button>
+            </div>
+            <div id="batchResult" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔗 快速导航</h2>
+            <div class="button-group">
+                <button onclick="goToFallbackPage()">查看降级页面</button>
+                <button onclick="goToActuator()">监控端点</button>
+                <button onclick="location.reload()">刷新页面</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testCount = 0;
+        let successCount = 0;
+        let failureCount = 0;
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            return `[${timestamp}] ${message}\n`;
+        }
+        
+        function updateResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent += log(message);
+            element.className = `result ${type}`;
+            element.scrollTop = element.scrollHeight;
+        }
+        
+        function clearResult(elementId) {
+            document.getElementById(elementId).textContent = '';
+        }
+        
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    method: options.method || 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                return { success: response.ok, data, status: response.status };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+        
+        async function testSuccess() {
+            clearResult('testResult');
+            updateResult('testResult', '正在发送正常请求...', 'info');
+            
+            const result = await makeRequest('/deliveryAddress/health');
+            testCount++;
+            
+            if (result.success) {
+                successCount++;
+                updateResult('testResult', `✅ 请求成功：${JSON.stringify(result.data)}`, 'success');
+            } else {
+                failureCount++;
+                updateResult('testResult', `❌ 请求失败：${result.error || result.data}`, 'error');
+            }
+            
+            updateMetrics();
+        }
+        
+        async function testFailure() {
+            clearResult('testResult');
+            updateResult('testResult', '正在发送失败请求（触发异常）...', 'info');
+            
+            const result = await makeRequest('/deliveryAddress/test/trigger-circuit-breaker?shouldFail=true');
+            testCount++;
+            
+            if (result.success) {
+                successCount++;
+                updateResult('testResult', `⚠️ 意外成功：${JSON.stringify(result.data)}`, 'success');
+            } else {
+                failureCount++;
+                updateResult('testResult', `✅ 按预期失败：${result.error || JSON.stringify(result.data)}`, 'error');
+            }
+            
+            updateMetrics();
+        }
+        
+        async function testHealthCheck() {
+            clearResult('testResult');
+            updateResult('testResult', '正在检查服务健康状态...', 'info');
+            
+            const result = await makeRequest('/actuator/health');
+            
+            if (result.success) {
+                updateResult('testResult', `✅ 健康检查通过：${JSON.stringify(result.data, null, 2)}`, 'success');
+            } else {
+                updateResult('testResult', `❌ 健康检查失败：${result.error || result.data}`, 'error');
+            }
+        }
+        
+        async function testCircuitBreakerStatus() {
+            clearResult('testResult');
+            updateResult('testResult', '正在检查熔断器状态...', 'info');
+            
+            const result = await makeRequest('/actuator/circuitbreakers');
+            
+            if (result.success) {
+                updateResult('testResult', `📊 熔断器状态：\n${JSON.stringify(result.data, null, 2)}`, 'info');
+                updateCircuitBreakerStatus(result.data);
+            } else {
+                updateResult('testResult', `❌ 无法获取熔断器状态：${result.error || result.data}`, 'error');
+            }
+        }
+        
+        async function triggerCircuitBreaker() {
+            clearResult('batchResult');
+            updateResult('batchResult', '开始批量发送失败请求以触发熔断器...', 'info');
+            
+            for (let i = 1; i <= 10; i++) {
+                updateResult('batchResult', `发送第 ${i} 个失败请求...`, 'info');
+                const result = await makeRequest('/deliveryAddress/test/trigger-circuit-breaker?shouldFail=true');
+                testCount++;
+                
+                if (result.success) {
+                    successCount++;
+                } else {
+                    failureCount++;
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 500)); // 延迟500ms
+            }
+            
+            updateResult('batchResult', '✅ 批量测试完成，检查熔断器是否已开启', 'success');
+            updateMetrics();
+            setTimeout(testCircuitBreakerStatus, 1000);
+        }
+        
+        async function testRecovery() {
+            clearResult('batchResult');
+            updateResult('batchResult', '测试服务恢复（等待熔断器进入半开状态）...', 'info');
+            
+            // 等待10秒让熔断器自动进入半开状态
+            updateResult('batchResult', '等待熔断器自动转换到半开状态（10秒）...', 'info');
+            
+            let countdown = 10;
+            const timer = setInterval(() => {
+                updateResult('batchResult', `倒数计时：${countdown} 秒`, 'info');
+                countdown--;
+                
+                if (countdown < 0) {
+                    clearInterval(timer);
+                    performRecoveryTest();
+                }
+            }, 1000);
+        }
+        
+        async function performRecoveryTest() {
+            updateResult('batchResult', '开始发送正常请求测试恢复...', 'info');
+            
+            for (let i = 1; i <= 3; i++) {
+                updateResult('batchResult', `发送第 ${i} 个恢复测试请求...`, 'info');
+                const result = await makeRequest('/deliveryAddress/health');
+                testCount++;
+                
+                if (result.success) {
+                    successCount++;
+                    updateResult('batchResult', `✅ 请求 ${i} 成功`, 'success');
+                } else {
+                    failureCount++;
+                    updateResult('batchResult', `❌ 请求 ${i} 失败`, 'error');
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            updateResult('batchResult', '🎉 恢复测试完成', 'success');
+            updateMetrics();
+            setTimeout(testCircuitBreakerStatus, 1000);
+        }
+        
+        function resetTest() {
+            testCount = 0;
+            successCount = 0;
+            failureCount = 0;
+            clearResult('testResult');
+            clearResult('batchResult');
+            updateMetrics();
+            updateResult('testResult', '测试数据已重置', 'info');
+        }
+        
+        function updateMetrics() {
+            const failureRate = testCount > 0 ? ((failureCount / testCount) * 100).toFixed(1) : 0;
+            
+            document.getElementById('metrics').innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-value">${testCount}</div>
+                    <div class="metric-label">总请求数</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${successCount}</div>
+                    <div class="metric-label">成功请求</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${failureCount}</div>
+                    <div class="metric-label">失败请求</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${failureRate}%</div>
+                    <div class="metric-label">失败率</div>
+                </div>
+            `;
+        }
+        
+        function updateCircuitBreakerStatus(data) {
+            // 这里可以根据实际的熔断器状态数据更新UI
+            const statusElement = document.getElementById('circuitBreakerStatus');
+            // 简化的状态显示
+            statusElement.innerHTML = `
+                <span class="status-indicator status-closed"></span>
+                <span>状态：已更新（详见测试结果）</span>
+            `;
+        }
+        
+        function goToFallbackPage() {
+            window.open('/fallback/address-service?originalUrl=' + encodeURIComponent(window.location.href) + '&errorType=MANUAL_TEST&errorMessage=手动测试降级页面', '_blank');
+        }
+        
+        function goToActuator() {
+            window.open('/actuator', '_blank');
+        }
+        
+        // 初始化
+        updateMetrics();
+        
+        // 页面载入时自动检查状态
+        setTimeout(testCircuitBreakerStatus, 1000);
+    </script>
+</body>
+</html> 

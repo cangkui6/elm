@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服务降级处理 - 配送地址服务</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .fallback-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            animation: slideUp 0.5s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .warning-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .warning-icon::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shine 2s infinite;
+        }
+        
+        @keyframes shine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .service-name {
+            color: #666;
+            font-size: 18px;
+            margin-bottom: 25px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .status-badge {
+            background: #f44336;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .error-message {
+            background: #ffebee;
+            border: 1px solid #e57373;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 25px;
+            color: #c62828;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        .info-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        
+        .info-row {
+            display: flex;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #333;
+            width: 100px;
+            flex-shrink: 0;
+        }
+        
+        .info-value {
+            color: #666;
+            flex: 1;
+        }
+        
+        .status-value {
+            color: #f44336;
+            font-weight: 600;
+        }
+        
+        .countdown-section {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 25px;
+            color: #1976d2;
+        }
+        
+        .countdown {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1976d2;
+        }
+        
+        .buttons-section {
+            margin-bottom: 20px;
+        }
+        
+        .retry-button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 15px;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .retry-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+        
+        .retry-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .home-button {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+        }
+        
+        .home-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+            text-decoration: none;
+            color: white;
+        }
+        
+        .refresh-button {
+            background: linear-gradient(45deg, #ff9800, #f57c00);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-left: 15px;
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+        }
+        
+        .refresh-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+        }
+        
+        .loading {
+            display: none;
+            margin-top: 15px;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .timestamp {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #999;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            width: 0%;
+            transition: width 1s ease-in-out;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+        }
+        
+        @media (max-width: 768px) {
+            .fallback-container {
+                padding: 30px 20px;
+            }
+            
+            .buttons-section button,
+            .buttons-section a {
+                display: block;
+                width: 100%;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="fallback-container">
+        <div class="warning-icon">⚠</div>
+        <h1>服务暂时不可用</h1>
+        <div class="service-name">
+            <span th:text="${serviceName}">配送地址服务</span>
+            <span class="status-badge" th:text="${statusText}">熔断降级中</span>
+        </div>
+        
+        <div class="error-message" th:text="${errorMessage}">
+            服务器端由于某种原因进行熔断降级处理，请稍后重试
+        </div>
+        
+        <div class="countdown-section">
+            <div>系统将在 <span class="countdown" id="countdown">30</span> 秒后自动重试</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+        </div>
+        
+        <div class="info-section">
+            <div class="info-row">
+                <span class="info-label">服务状态：</span>
+                <span class="info-value status-value" th:text="${statusText}">熔断降级中</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">错误类型：</span>
+                <span class="info-value" th:text="${errorType}">CIRCUIT_BREAKER</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">故障时间：</span>
+                <span class="info-value" th:text="${currentTime}">2024-01-01 00:00:00</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">服务实例：</span>
+                <span class="info-value" th:text="${serverInfo}">localhost:8006</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">预计恢复：</span>
+                <span class="info-value">系统正在自动修复中...</span>
+            </div>
+        </div>
+        
+        <div class="buttons-section">
+            <button class="retry-button" onclick="retryRequest()" id="retryBtn">
+                <span id="retry-text">返回重试</span>
+            </button>
+            <button class="refresh-button" onclick="checkServiceStatus()">
+                检查服务状态
+            </button>
+            <a href="/" class="home-button">返回首页</a>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div style="margin-top: 10px; color: #666;">正在重试...</div>
+        </div>
+        
+        <div class="timestamp">
+            <div>页面生成时间：<span th:text="${currentTime}">2024-01-01 00:00:00</span></div>
+            <div style="margin-top: 5px;">重试间隔：<span th:text="${retryAfter}">30</span> 秒</div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        <span id="notificationText">状态更新中...</span>
+    </div>
+
+    <script th:inline="javascript">
+        var originalUrl = /*[[${originalUrl}]]*/ '/';
+        var retryAfter = parseInt(/*[[${retryAfter}]]*/ '30');
+        var countdownSeconds = retryAfter;
+        var countdownInterval;
+        var progressInterval;
+        var retryCount = 0;
+        var maxRetries = 3;
+        
+        function showNotification(message, type = 'success') {
+            var notification = document.getElementById('notification');
+            var notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = message;
+            notification.style.display = 'block';
+            notification.style.background = type === 'success' ? '#4CAF50' : '#f44336';
+            
+            setTimeout(function() {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+        
+        function updateProgress() {
+            var progress = document.getElementById('progress');
+            var percentage = ((retryAfter - countdownSeconds) / retryAfter) * 100;
+            progress.style.width = percentage + '%';
+        }
+        
+        function startCountdown() {
+            var countdownElement = document.getElementById('countdown');
+            
+            countdownInterval = setInterval(function() {
+                countdownSeconds--;
+                countdownElement.textContent = countdownSeconds;
+                updateProgress();
+                
+                if (countdownSeconds <= 0) {
+                    clearInterval(countdownInterval);
+                    clearInterval(progressInterval);
+                    autoRetry();
+                }
+            }, 1000);
+        }
+        
+        function autoRetry() {
+            showNotification('自动重试中...', 'info');
+            retryRequest(true);
+        }
+        
+        function retryRequest(isAuto = false) {
+            var retryButton = document.getElementById('retryBtn');
+            var loading = document.getElementById('loading');
+            var retryText = document.getElementById('retry-text');
+            
+            if (!isAuto) {
+                retryCount++;
+                if (retryCount > maxRetries) {
+                    showNotification('重试次数过多，请稍后再试', 'error');
+                    return;
+                }
+            }
+            
+            // 停止倒计时
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            // 显示loading状态
+            retryButton.disabled = true;
+            retryText.textContent = '重试中...';
+            loading.style.display = 'block';
+            
+            // 检查服务状态
+            checkServiceStatus().then(function(isAvailable) {
+                if (isAvailable) {
+                    showNotification('服务已恢复，正在跳转...', 'success');
+                    setTimeout(function() {
+                        window.location.href = originalUrl;
+                    }, 1500);
+                } else {
+                    showNotification('服务仍不可用，请稍后重试', 'error');
+                    // 重新启动倒计时
+                    setTimeout(function() {
+                        resetRetryState();
+                        startCountdown();
+                    }, 2000);
+                }
+            }).catch(function() {
+                // 直接跳转，让用户看到实际的服务状态
+                setTimeout(function() {
+                    window.location.href = originalUrl;
+                }, 3000);
+            });
+        }
+        
+        function resetRetryState() {
+            var retryButton = document.getElementById('retryBtn');
+            var loading = document.getElementById('loading');
+            var retryText = document.getElementById('retry-text');
+            
+            retryButton.disabled = false;
+            retryText.textContent = '返回重试';
+            loading.style.display = 'none';
+            countdownSeconds = retryAfter;
+            document.getElementById('countdown').textContent = countdownSeconds;
+            document.getElementById('progress').style.width = '0%';
+        }
+        
+        function checkServiceStatus() {
+            return new Promise(function(resolve, reject) {
+                // 简单的健康检查
+                var xhr = new XMLHttpRequest();
+                xhr.timeout = 5000;
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            resolve(true);
+                        } else {
+                            resolve(false);
+                        }
+                    }
+                };
+                xhr.ontimeout = function() {
+                    resolve(false);
+                };
+                xhr.onerror = function() {
+                    resolve(false);
+                };
+                
+                // 尝试访问一个简单的健康检查端点
+                xhr.open('GET', '/actuator/health', true);
+                xhr.send();
+            });
+        }
+        
+        // 页面载入后启动倒计时
+        document.addEventListener('DOMContentLoaded', function() {
+            startCountdown();
+            
+            // 5秒后显示提示
+            setTimeout(function() {
+                if (countdownSeconds > 25) {
+                    showNotification('您可以点击"返回重试"按钮立即重试', 'info');
+                }
+            }, 5000);
+        });
+        
+        // 键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                retryRequest();
+            } else if (e.key === 'Escape') {
+                window.location.href = '/';
+            }
+        });
+        
+        // 页面可见性变化时的处理
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                // 页面隐藏时暂停倒计时
+                if (countdownInterval) {
+                    clearInterval(countdownInterval);
+                }
+            } else {
+                // 页面可见时恢复倒计时
+                if (countdownSeconds > 0) {
+                    startCountdown();
+                }
+            }
+        });
+    </script>
+</body>
+</html> 
