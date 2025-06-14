@@ -95,16 +95,6 @@ spring:
             - StripPrefix=0
           order: 7
           
-        # 前端路由刷新处理 - 最低优先级
-        - id: frontend-fallback
-          uri: ${spa.frontend-url}
-          predicates:
-            - Path=/**
-          filters:
-            # 简单重定向，无需尝试保留路径
-            - RedirectTo=302,${spa.frontend-url}
-          order: 100
-          
   config:
     import: optional:configserver:http://localhost:8888
   rabbitmq:

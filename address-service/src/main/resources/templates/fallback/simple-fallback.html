@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服务暂时不可用</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .fallback-content {
+            text-align: center;
+            animation: fadeInUp 0.8s ease-out;
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 机器人图标样式 */
+        .robot-icon {
+            width: 120px;
+            height: 140px;
+            margin: 0 auto 30px;
+            position: relative;
+        }
+        
+        .face {
+            width: 80px;
+            height: 80px;
+            background: #e8e8e8;
+            border: 3px solid #ccc;
+            border-radius: 15px;
+            margin: 0 auto;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .face::before,
+        .face::after {
+            content: '';
+            position: absolute;
+            top: -8px;
+            width: 8px;
+            height: 8px;
+            background: #ccc;
+            border-radius: 50%;
+        }
+        
+        .face::before {
+            left: 20px;
+        }
+        
+        .face::after {
+            right: 20px;
+        }
+        
+        .eyes {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 8px;
+        }
+        
+        .eye {
+            font-size: 18px;
+            color: #666;
+            animation: blink 2s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 90%, 100% { opacity: 1; }
+            95% { opacity: 0.3; }
+        }
+        
+        .mouth {
+            font-size: 16px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .body {
+            width: 60px;
+            height: 40px;
+            background: #f0f0f0;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            margin: 8px auto 0;
+            position: relative;
+        }
+        
+        .body::before,
+        .body::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 15px;
+            height: 3px;
+            background: #ccc;
+            border-radius: 2px;
+            transform: translateY(-50%);
+        }
+        
+        .body::before {
+            left: -18px;
+        }
+        
+        .body::after {
+            right: -18px;
+        }
+        
+        .error-message {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 40px;
+            font-weight: 500;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .retry-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+        
+        .retry-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+        
+        .retry-btn:active {
+            transform: translateY(0);
+        }
+        
+        .home-link {
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+        
+        .home-link:hover {
+            color: #4CAF50;
+        }
+        
+        /* 底部导航 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e5e5e5;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 5px;
+            transition: color 0.3s ease;
+            color: #999;
+            text-decoration: none;
+        }
+        
+        .nav-item:hover {
+            color: #0097FF;
+        }
+        
+        .nav-item .icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-item span {
+            font-size: 12px;
+        }
+        
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .fallback-content {
+                padding: 0 20px;
+            }
+            
+            .robot-icon {
+                width: 100px;
+                height: 120px;
+            }
+            
+            .face {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .error-message {
+                font-size: 16px;
+            }
+            
+            .retry-btn {
+                padding: 12px 30px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="fallback-content">
+        <!-- 困惑的机器人图标 -->
+        <div class="robot-icon">
+            <div class="face">
+                <div class="eyes">
+                    <div class="eye left">></div>
+                    <div class="eye right"><</div>
+                </div>
+                <div class="mouth">〜</div>
+            </div>
+            <div class="body"></div>
+        </div>
+        
+        <!-- 错误信息 -->
+        <div class="error-message">
+            呃呃...服务器忙中...
+        </div>
+        
+        <!-- 返回重试按钮 -->
+        <button class="retry-btn" onclick="handleRetry()">
+            返回重试
+        </button>
+        
+        <!-- 返回首页链接 -->
+        <a href="/" class="home-link">返回首页</a>
+    </div>
+    
+    <!-- 底部导航 -->
+    <div class="bottom-nav">
+        <a href="/" class="nav-item">
+            <div class="icon">🏠</div>
+            <span>首页</span>
+        </a>
+        <div class="nav-item">
+            <div class="icon">🔍</div>
+            <span>发现</span>
+        </div>
+        <div class="nav-item">
+            <div class="icon">📋</div>
+            <span>订单</span>
+        </div>
+        <div class="nav-item">
+            <div class="icon">👤</div>
+            <span>我的</span>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        var originalUrl = /*[[${originalUrl}]]*/ '/';
+        var retryCount = 0;
+        var maxRetries = 3;
+        
+        function handleRetry() {
+            retryCount++;
+            
+            if (retryCount > maxRetries) {
+                window.location.href = '/';
+                return;
+            }
+            
+            // 显示重试状态
+            var btn = document.querySelector('.retry-btn');
+            btn.textContent = '重试中...';
+            btn.disabled = true;
+            
+            // 等待一段时间后跳转回原页面
+            setTimeout(function() {
+                if (originalUrl && originalUrl !== '/fallback') {
+                    window.location.href = originalUrl;
+                } else {
+                    window.history.back();
+                }
+            }, 1000);
+        }
+        
+        // 5秒后自动重试
+        setTimeout(function() {
+            if (retryCount === 0) {
+                handleRetry();
+            }
+        }, 5000);
+        
+        // 键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleRetry();
+            } else if (e.key === 'Escape') {
+                window.location.href = '/';
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -62,3 +62,49 @@ management:
   endpoint:
     health:
       show-details: always 
+
+# Resilience4j 配置
+resilience4j:
+  circuitbreaker:
+    instances:
+      default:
+        failure-rate-threshold: 50
+        minimum-number-of-calls: 5
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 5s
+        permitted-number-of-calls-in-half-open-state: 3
+        sliding-window-type: count_based
+        sliding-window-size: 10
+      user-service:
+        failure-rate-threshold: 50
+        minimum-number-of-calls: 3
+        wait-duration-in-open-state: 10s
+      business-service:
+        failure-rate-threshold: 50
+        minimum-number-of-calls: 3
+        wait-duration-in-open-state: 10s
+      order-service:
+        failure-rate-threshold: 50
+        minimum-number-of-calls: 3
+        wait-duration-in-open-state: 10s
+      food-service:
+        failure-rate-threshold: 50
+        minimum-number-of-calls: 3
+        wait-duration-in-open-state: 10s
+      cart-service:
+        failure-rate-threshold: 50
+        minimum-number-of-calls: 3
+        wait-duration-in-open-state: 10s
+      address-service:
+        failure-rate-threshold: 50
+        minimum-number-of-calls: 3
+        wait-duration-in-open-state: 10s
+  retry:
+    instances:
+      default:
+        max-attempts: 3
+        wait-duration: 1s
+  timelimiter:
+    instances:
+      default:
+        timeout-duration: 5s 

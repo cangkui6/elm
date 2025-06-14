@@ -47,7 +47,7 @@ public class FallbackController {
         model.addAttribute("retryAfter", retryAfter);
         model.addAttribute("serverInfo", getServerInfo(request));
         
-        return "fallback/address-service-fallback";
+        return "fallback/simple-fallback";
     }
     
     private String getErrorMessage(String errorType, String defaultMessage) {
