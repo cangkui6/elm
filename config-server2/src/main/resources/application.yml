@@ -19,11 +19,29 @@ spring:
         health:
           repositories:
             enabled: true
+    # 消息总线配置
+    bus:
+      enabled: true
+      refresh:
+        enabled: true
+      env:
+        enabled: true
+      id: config-server-8889
   rabbitmq:
     host: localhost
     port: 5672
     username: guest
     password: guest
+    connection-timeout: 15000
+    virtual-host: /
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    listener:
+      simple:
+        acknowledge-mode: manual
+        retry:
+          enabled: true
+          max-attempts: 3
 
 eureka:
   client:
@@ -34,6 +52,8 @@ eureka:
       enabled: true
     # 配置获取服务列表的间隔时间
     registry-fetch-interval-seconds: 30
+    fetch-registry: true
+    register-with-eureka: true
   instance:
     prefer-ip-address: true
     instance-id: ${spring.cloud.client.ip-address}:${server.port}
@@ -47,7 +67,23 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,bus-refresh,refresh
+        include: "*"
+      base-path: /actuator
   endpoint:
     health:
-      show-details: always 
+      show-details: always
+    refresh:
+      enabled: true
+    bus-refresh:
+      enabled: true
+  health:
+    rabbit:
+      enabled: true
+
+# 日志配置
+logging:
+  level:
+    org.springframework.cloud.config: DEBUG
+    org.springframework.cloud.bus: DEBUG
+    org.springframework.amqp: DEBUG
+    com.elm.config: INFO 
